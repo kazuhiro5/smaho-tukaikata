@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スマホ名人への道：基本操作ガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #f5f5f4; /* stone-100: Warm neutral background */
+        }
+        
+        /* Custom Scrollbar for better visibility */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e7e5e4; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a29e; 
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #78716c; 
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px; /* Constrain max width */
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        /* Large Touch Targets for Accessibility */
+        .touch-target {
+            min-height: 48px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .touch-target:active {
+            transform: scale(0.98);
+        }
+
+        .checkbox-custom {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #d6d3d1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .checkbox-custom.checked {
+            background-color: #16a34a; /* green-600 */
+            border-color: #16a34a;
+            color: white;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Stone) with Green Accents for Success/Progress. Chosen for calmness and clarity. -->
+    <!-- Application Structure Plan: Hub-and-Spoke model. 
+         1. Dashboard (Home): Shows overall progress chart and grid of 8 lessons.
+         2. Primer Section: Always visible 'PC vs Smartphone' comparison.
+         3. Lesson View: Modal/Overlay interface for focus. Break down tasks into interactive checklists.
+         Why: Reduces cognitive load. The user focuses on one task at a time. Progress chart provides gamification/motivation.
+    -->
+    <!-- Visualization & Content Choices:
+         - Progress Chart (Doughnut): Goal: Inform/Motivate. Viz: Chart.js Doughnut. Justification: Visualizes 'how much is left' simply.
+         - Lesson Grid: Goal: Navigation. Viz: Card Grid with big Icons. Justification: Easy to tap, clear distinction between topics.
+         - Step Checklists: Goal: Inform/Track. Viz: Interactive List. Justification: Helps user keep their place in the manual.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="text-stone-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-stone-800 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold flex items-center gap-2">
+                <span>🎓</span> スマホ名人への道
+            </h1>
+            <button id="resetBtn" class="text-sm bg-stone-600 hover:bg-stone-500 px-3 py-1 rounded text-stone-200">
+                初めからやり直す
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto p-4 md:p-6 space-y-8">
+
+        <!-- Intro / Mental Model Section -->
+        <section class="bg-white rounded-xl shadow-md p-6 border-l-8 border-orange-400">
+            <h2 class="text-xl font-bold mb-4 text-orange-800">はじめに：パソコンとここが違います！</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-lg">
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <div class="font-bold text-orange-700 mb-2">👆 マウス ➡ 指</div>
+                    <p>クリックは<strong>「ポンと叩く（タップ）」</strong>。<br>ドラッグは<strong>「なぞる（スワイプ）」</strong>です。</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <div class="font-bold text-orange-700 mb-2">🖱️ 右クリックなし</div>
+                    <p>迷ったら<strong>「長押し（指をずっと置く）」</strong>を試してみましょう。</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                    <div class="font-bold text-orange-700 mb-2">🛡️ 壊れません</div>
+                    <p>変な画面になっても<strong>「ホームボタン（下の丸や家マーク）」</strong>でいつでも戻れます。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-white rounded-xl shadow-md p-6">
+            <div>
+                <h2 class="text-2xl font-bold mb-2">あなたの習得度</h2>
+                <p class="text-stone-600 mb-4">この教科書を使って、ひとつずつスマホの使い方を覚えましょう。全部できたら「スマホ名人」です！</p>
+                <div class="text-4xl font-bold text-green-600 mb-2">
+                    <span id="progress-percent">0</span>% 完了
+                </div>
+                <p class="text-sm text-stone-500">（<span id="completed-count">0</span> / 8 項目クリア）</p>
+            </div>
+            
+            <!-- Chart Container -->
+            <div class="w-full flex justify-center">
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lessons Grid -->
+        <section>
+            <h2 class="text-2xl font-bold mb-6 border-b-2 border-stone-200 pb-2">学習メニュー</h2>
+            <div id="lesson-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Grid items generated by JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-200 text-stone-600 text-center p-6 mt-8">
+        <p>焦らず、ゆっくり楽しみましょう。</p>
+    </footer>
+
+    <!-- Lesson Modal -->
+    <div id="lesson-modal" class="fixed inset-0 bg-stone-900 bg-opacity-75 hidden z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="bg-stone-100 p-4 border-b flex justify-between items-center sticky top-0">
+                <h3 id="modal-title" class="text-xl font-bold text-stone-800"></h3>
+                <button id="close-modal" class="bg-stone-300 hover:bg-stone-400 text-stone-800 rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold">×</button>
+            </div>
+
+            <!-- Modal Content (Scrollable) -->
+            <div class="p-6 overflow-y-auto custom-scrollbar">
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
+                    <h4 class="font-bold text-blue-700 mb-1">目的</h4>
+                    <p id="modal-purpose" class="text-stone-700"></p>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-sm text-stone-500 mb-2">手順リスト（やったらチェックを入れてみましょう）</p>
+                    <div id="modal-steps" class="space-y-3">
+                        <!-- Steps injected by JS -->
+                    </div>
+                </div>
+
+                <!-- Interactive Tips Box -->
+                <div class="mt-8 bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                    <h4 class="font-bold text-yellow-800 flex items-center gap-2">
+                        <span>💡</span> 先生からのアドバイス
+                    </h4>
+                    <p id="modal-advice" class="text-stone-700 mt-2 text-lg leading-relaxed"></p>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 border-t bg-stone-50 flex justify-end">
+                <button id="finish-lesson-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform active:scale-95 text-lg">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Structure ---
+        const lessonData = [
+            {
+                id: 1,
+                title: "電話帳（連絡先）",
+                icon: "☎️",
+                purpose: "家族や友人の番号を登録して、いつでも電話できるようにします。",
+                steps: [
+                    "人の形のアイコン（連絡先）をポンと叩く。",
+                    "「＋」マーク（または作成）を叩く。",
+                    "名前と電話番号を入力する（パソコンと同じ）。",
+                    "【重要】画面上の「保存」を必ず叩く。",
+                    "電話をかける時は、名前を叩いて受話器マークを押す。"
+                ],
+                advice: "ガラケーと違い、入力しただけでは残りません。「保存」ボタンを押すまでが登録です！",
+                completed: false
+            },
+            {
+                id: 2,
+                title: "朝のアラーム",
+                icon: "⏰",
+                purpose: "スマホを目覚まし時計として使います。",
+                steps: [
+                    "時計の絵のアイコンを叩く。",
+                    "「アラーム」の文字を選んで叩く。",
+                    "「＋」を叩き、時間を数字をなぞって合わせる。",
+                    "「保存」または「OK」を叩く。",
+                    "止めるときは、画面を横に大きくスライドさせる。"
+                ],
+                advice: "音量の大きさは、スマホの横にあるボタンで確認しておきましょう。",
+                completed: false
+            },
+            {
+                id: 3,
+                title: "インターネット検索",
+                icon: "🔍",
+                purpose: "天気やニュースなど、知りたいことを調べます。",
+                steps: [
+                    "画面にあるGoogle（白い横長の窓）を叩く。",
+                    "「マイクの絵」をポンと叩く。",
+                    "スマホに向かって「明日の天気は？」と話しかける。",
+                    "終わったら画面下の「◀（戻る）」で戻る。"
+                ],
+                advice: "入力が大変なら「声」で検索するのが一番です。恥ずかしがらずに話しかけてみてください。",
+                completed: false
+            },
+            {
+                id: 4,
+                title: "キーボード切替",
+                icon: "⌨️",
+                purpose: "文字入力をパソコンと同じ配列にします。",
+                steps: [
+                    "文字を入れる画面でキーボードを出す。",
+                    "歯車マーク（設定）を叩く。",
+                    "「言語」→「日本語」と進む。",
+                    "「QWERTY（クワーティ）」を選ぶ。",
+                    "地球儀マークで英語/日本語を切り替える。"
+                ],
+                advice: "無理にフリック入力（あいうえお）を覚えなくても大丈夫。使い慣れたローマ字入力でいきましょう。",
+                completed: false
+            },
+            {
+                id: 5,
+                title: "電車乗り換え",
+                icon: "🚃",
+                purpose: "目的地までの行き方、時間、料金を調べます。",
+                steps: [
+                    "「乗換案内」アプリのアイコンを叩く。",
+                    "「出発」に今の駅名を入れる（または現在地）。",
+                    "「到着」に行きたい駅名を入れる。",
+                    "「検索」ボタンを叩く。",
+                    "「早」や「楽」と書いてあるルートを見る。"
+                ],
+                advice: "何番線から発車するか（例：3番線）も画面に出ています。よく見てみましょう。",
+                completed: false
+            },
+            {
+                id: 6,
+                title: "QRコード",
+                icon: "📷",
+                purpose: "お店のメニューや案内を読み取ります。",
+                steps: [
+                    "「カメラ」アプリを起動する。",
+                    "QRコード（四角い模様）にカメラを向ける。",
+                    "シャッターボタンは押さない！待つだけ。",
+                    "画面に出た「黄色い文字（リンク）」を叩く。"
+                ],
+                advice: "カメラを近づけすぎるとボケます。少し離して、画面の中でピントが合うのを待ちましょう。",
+                completed: false
+            },
+            {
+                id: 7,
+                title: "Googleマップ",
+                icon: "🗺️",
+                purpose: "地図を見て、今どこにいるか確認します。",
+                steps: [
+                    "地図のアイコン（マップ）を叩く。",
+                    "右下の「的（まと）」のようなマークを叩く。",
+                    "青い丸が「今いる場所」です。",
+                    "行きたい場所を上の窓に入力して「経路」を押す。"
+                ],
+                advice: "青い丸から出ている「扇形の光」は、自分が向いている方向です。くるっと回ってみてください。",
+                completed: false
+            },
+            {
+                id: 8,
+                title: "整理整頓（削除）",
+                icon: "🧹",
+                purpose: "いらないアプリや通知を消してスッキリさせます。",
+                steps: [
+                    "アプリを消す時は、アイコンを「長押し」する。",
+                    "「アンインストール」やゴミ箱マークを選ぶ。",
+                    "通知は、画面の一番上から指を下へなぞる。",
+                    "溜まった通知を横へ弾いて飛ばす。",
+                    "「すべて消去」で一括削除。"
+                ],
+                advice: "通知は放っておくと溜まります。朝起きたら「上から下へスワイプ」して掃除する習慣をつけましょう。",
+                completed: false
+            }
+        ];
+
+        // --- State Management ---
+        let currentLessonId = null;
+        let progressChartInstance = null;
+
+        // --- DOM Elements ---
+        const gridEl = document.getElementById('lesson-grid');
+        const modalEl = document.getElementById('lesson-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalPurpose = document.getElementById('modal-purpose');
+        const modalSteps = document.getElementById('modal-steps');
+        const modalAdvice = document.getElementById('modal-advice');
+        const closeModalBtn = document.getElementById('close-modal');
+        const finishLessonBtn = document.getElementById('finish-lesson-btn');
+        const progressPercentEl = document.getElementById('progress-percent');
+        const completedCountEl = document.getElementById('completed-count');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            renderDashboard();
+            initChart();
+        });
+
+        // --- Functions ---
+
+        function loadProgress() {
+            const savedData = localStorage.getItem('grandpaGuideProgress');
+            if (savedData) {
+                const parsed = JSON.parse(savedData);
+                // Merge saved completion status
+                lessonData.forEach(lesson => {
+                    const saved = parsed.find(p => p.id === lesson.id);
+                    if (saved) lesson.completed = saved.completed;
+                });
+            }
+        }
+
+        function saveProgress() {
+            const dataToSave = lessonData.map(l => ({ id: l.id, completed: l.completed }));
+            localStorage.setItem('grandpaGuideProgress', JSON.stringify(dataToSave));
+            updateChart();
+        }
+
+        function calculateProgress() {
+            const total = lessonData.length;
+            const completed = lessonData.filter(l => l.completed).length;
+            return { total, completed, percent: Math.round((completed / total) * 100) };
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            const { completed, total } = calculateProgress();
+            
+            Chart.defaults.font.family = "'Noto Sans JP', sans-serif";
+            Chart.defaults.font.size = 14;
+
+            progressChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['完了', 'これから'],
+                    datasets: [{
+                        data: [completed, total - completed],
+                        backgroundColor: ['#16a34a', '#e5e7eb'], // green-600, gray-200
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 16 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + ' 個';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%', // Thinner ring
+                    animation: {
+                        animateScale: true,
+                        animateRotate: true
+                    }
+                }
+            });
+            updateStatsUI();
+        }
+
+        function updateChart() {
+            if (!progressChartInstance) return;
+            const { completed, total } = calculateProgress();
+            progressChartInstance.data.datasets[0].data = [completed, total - completed];
+            progressChartInstance.update();
+            updateStatsUI();
+        }
+
+        function updateStatsUI() {
+            const { completed, total, percent } = calculateProgress();
+            progressPercentEl.textContent = percent;
+            completedCountEl.textContent = completed;
+        }
+
+        function renderDashboard() {
+            gridEl.innerHTML = '';
+            lessonData.forEach(lesson => {
+                const card = document.createElement('div');
+                card.className = `
+                    touch-target bg-white rounded-xl shadow p-6 flex flex-col items-center text-center 
+                    transition duration-200 hover:shadow-lg hover:-translate-y-1 border-2 
+                    ${lesson.completed ? 'border-green-500 bg-green-50' : 'border-transparent'}
+                `;
+                
+                // Status Badge
+                const statusHTML = lesson.completed 
+                    ? `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mb-2 font-bold">習得済み！</span>`
+                    : `<span class="bg-stone-100 text-stone-500 text-xs px-2 py-1 rounded-full mb-2">未完了</span>`;
+
+                card.innerHTML = `
+                    ${statusHTML}
+                    <div class="text-5xl mb-4">${lesson.icon}</div>
+                    <h3 class="text-lg font-bold text-stone-800">${lesson.title}</h3>
+                    <button class="mt-4 w-full bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold py-2 px-4 rounded transition-colors">
+                        勉強する
+                    </button>
+                `;
+                
+                card.onclick = () => openLesson(lesson);
+                gridEl.appendChild(card);
+            });
+        }
+
+        function openLesson(lesson) {
+            currentLessonId = lesson.id;
+            modalTitle.textContent = `${lesson.icon} ${lesson.title}`;
+            modalPurpose.textContent = lesson.purpose;
+            modalAdvice.textContent = lesson.advice;
+            
+            modalSteps.innerHTML = '';
+            lesson.steps.forEach((step, index) => {
+                const stepRow = document.createElement('div');
+                stepRow.className = "flex items-start p-3 rounded-lg hover:bg-stone-50 transition-colors touch-target";
+                stepRow.onclick = () => toggleCheck(stepRow);
+
+                const checkbox = document.createElement('div');
+                checkbox.className = "checkbox-custom";
+                checkbox.innerHTML = '✓'; // Hidden by default CSS logic if not active? Actually let's just toggle class
+
+                const text = document.createElement('p');
+                text.className = "text-lg text-stone-800 flex-1";
+                text.innerHTML = `<span class="font-bold text-stone-400 mr-2">${index + 1}.</span> ${step}`;
+
+                stepRow.appendChild(checkbox);
+                stepRow.appendChild(text);
+                modalSteps.appendChild(stepRow);
+            });
+
+            // If already completed, maybe visually show it, but for now we let them re-do the checks
+            modalEl.classList.remove('hidden');
+            // Disable body scroll
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLesson() {
+            modalEl.classList.add('hidden');
+            document.body.style.overflow = '';
+            currentLessonId = null;
+        }
+
+        function toggleCheck(row) {
+            const checkbox = row.querySelector('.checkbox-custom');
+            checkbox.classList.toggle('checked');
+            
+            // Check if all are checked to mark lesson as complete
+            checkCompletionStatus();
+        }
+
+        function checkCompletionStatus() {
+            const allChecks = modalSteps.querySelectorAll('.checkbox-custom');
+            const checkedCount = modalSteps.querySelectorAll('.checkbox-custom.checked').length;
+            
+            // If user checks all boxes, we auto-update the data model to completed
+            // Or we wait for the "Close" button. Let's do it on the "Close/Finish" button click to be explicit.
+        }
+
+        // --- Event Listeners ---
+
+        closeModalBtn.addEventListener('click', closeLesson);
+
+        finishLessonBtn.addEventListener('click', () => {
+            // Calculate if we should mark as complete
+            const allChecks = modalSteps.querySelectorAll('.checkbox-custom');
+            const checkedCount = modalSteps.querySelectorAll('.checkbox-custom.checked').length;
+            
+            // If at least 1 step is checked, we assume they did something. 
+            // Better logic: If more than 50% steps checked, mark complete. 
+            // Or just simple toggle.
+            // Let's make it strict: All steps checked = Complete. 
+            // Actually for Grandpa, let's be kind. If he clicks "Finish", we ask/toggle.
+            
+            const lesson = lessonData.find(l => l.id === currentLessonId);
+            if (lesson) {
+                // If they checked everything, mark complete.
+                if (checkedCount === allChecks.length) {
+                    lesson.completed = true;
+                }
+                // If they uncheck everything, mark incomplete.
+                else if (checkedCount === 0) {
+                    lesson.completed = false;
+                }
+                // Partial? Let's leave it as is or mark complete if he feels done. 
+                // Let's assume checking all boxes is the goal.
+                
+                saveProgress();
+                renderDashboard();
+            }
+            closeLesson();
+        });
+
+        // Close modal on outside click
+        modalEl.addEventListener('click', (e) => {
+            if (e.target === modalEl) closeLesson();
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if(confirm('本当に最初からやり直しますか？今の記録は消えます。')) {
+                lessonData.forEach(l => l.completed = false);
+                saveProgress();
+                renderDashboard();
+            }
+        });
+
+    </script>
+</body>
+</html>
