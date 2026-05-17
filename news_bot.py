@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+import json
 import os
 import urllib.request
-import urllib.parse
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
-LINE_NOTIFY_TOKEN = os.environ["LINE_NOTIFY_TOKEN"]
+CHANNEL_ACCESS_TOKEN = os.environ["LINE_CHANNEL_ACCESS_TOKEN"]
+USER_ID = os.environ["LINE_USER_ID"]
 
 # NHK国際ニュース RSS
 RSS_URLS = [
@@ -30,22 +31,28 @@ def fetch_rss(url: str, max_items: int = 5) -> list[dict]:
     return items
 
 
-def send_line_notify(message: str) -> None:
-    data = urllib.parse.urlencode({"message": message}).encode()
+def send_line_message(text: str) -> None:
+    payload = json.dumps({
+        "to": USER_ID,
+        "messages": [{"type": "text", "text": text}],
+    }).encode()
     req = urllib.request.Request(
-        "https://notify-api.line.me/api/notify",
-        data=data,
-        headers={"Authorization": f"Bearer {LINE_NOTIFY_TOKEN}"},
+        "https://api.line.me/v2/bot/message/push",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {CHANNEL_ACCESS_TOKEN}",
+        },
         method="POST",
     )
     with urllib.request.urlopen(req, timeout=10) as resp:
         if resp.status != 200:
-            raise RuntimeError(f"LINE Notify error: {resp.status}")
+            raise RuntimeError(f"Messaging API error: {resp.status}")
 
 
 def main() -> None:
     now = datetime.now(JST)
-    lines = [f"\n🌍 {now.strftime('%Y年%m月%d日')} 朝の国際ニュース\n"]
+    lines = [f"🌍 {now.strftime('%Y年%m月%d日')} 朝の国際ニュース\n"]
 
     for label, url in RSS_URLS:
         try:
@@ -61,8 +68,7 @@ def main() -> None:
                 lines.append(f"   {item['link']}")
         lines.append("")
 
-    message = "\n".join(lines)
-    send_line_notify(message)
+    send_line_message("\n".join(lines))
     print("送信完了")
 
 
