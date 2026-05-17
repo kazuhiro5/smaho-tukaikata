@@ -1,0 +1,23 @@
+name: 毎朝ニュース送信
+
+on:
+  schedule:
+    # 9:00 JST = 00:00 UTC
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ニュース取得・LINE送信
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: python news_bot.py
