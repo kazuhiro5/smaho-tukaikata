@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企業マッチング｜あなたに合う企業・インターン情報</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; background: #f0f4ff; }
+
+        .step { display: none; }
+        .step.active { display: block; }
+
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        .industry-btn { transition: all 0.2s; border: 2px solid #c7d2fe; }
+        .industry-btn.selected { background: #4f46e5; color: white; border-color: #4f46e5; transform: scale(1.03); }
+
+        .q-option { transition: all 0.2s; cursor: pointer; border: 2px solid #e5e7eb; }
+        .q-option.selected { background: #eef2ff; border-color: #6366f1; }
+        .q-option:hover { border-color: #a5b4fc; }
+
+        .score-bar-fill { transition: width 0.8s ease; }
+
+        .rank-badge { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 14px; flex-shrink: 0; }
+
+        .match-ring {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 900;
+            border: 8px solid;
+            flex-shrink: 0;
+        }
+
+        .schedule-card { border-left: 4px solid; }
+
+        .progress-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        @media (max-width: 640px) {
+            .match-ring { width: 72px; height: 72px; font-size: 16px; border-width: 6px; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ========== HEADER ========== -->
+<header class="bg-indigo-700 text-white px-4 py-4 shadow-lg sticky top-0 z-50">
+    <div class="max-w-3xl mx-auto flex items-center justify-between">
+        <div>
+            <a href="index.html" class="text-indigo-200 text-sm hover:text-white">← ホーム</a>
+            <h1 class="text-lg font-bold leading-tight mt-0.5">企業マッチング診断</h1>
+        </div>
+        <div id="step-indicator" class="flex items-center gap-1.5">
+            <div class="progress-dot bg-white" id="dot1"></div>
+            <div class="progress-dot bg-indigo-400" id="dot2"></div>
+            <div class="progress-dot bg-indigo-400" id="dot3"></div>
+            <div class="progress-dot bg-indigo-400" id="dot4"></div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 py-6">
+
+<!-- ========== STEP 1: WELCOME ========== -->
+<div class="step active fade-in" id="step1">
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
+        <div class="text-center mb-6">
+            <div class="text-5xl mb-3">🎯</div>
+            <h2 class="text-2xl font-black text-indigo-800 mb-2">あなたに合う企業を見つけよう</h2>
+            <p class="text-stone-600 text-sm leading-relaxed">
+                いくつかの質問に答えるだけで、<strong>20社の中からあなたとの相性</strong>を多角的に分析。<br>
+                上位2社のインターン・説明会日程もまとめてお届けします。
+            </p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 mb-6 text-center text-sm">
+            <div class="bg-indigo-50 rounded-xl p-3">
+                <div class="text-2xl mb-1">🔬</div>
+                <div class="font-bold text-indigo-700">8軸で分析</div>
+                <div class="text-xs text-stone-500">革新性・安定性など</div>
+            </div>
+            <div class="bg-purple-50 rounded-xl p-3">
+                <div class="text-2xl mb-1">🏢</div>
+                <div class="font-bold text-purple-700">20社を比較</div>
+                <div class="text-xs text-stone-500">主要業界から厳選</div>
+            </div>
+            <div class="bg-green-50 rounded-xl p-3">
+                <div class="text-2xl mb-1">📅</div>
+                <div class="font-bold text-green-700">日程をご案内</div>
+                <div class="text-xs text-stone-500">インターン&説明会</div>
+            </div>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-800">
+            <strong>📊 分析の8つの軸：</strong>革新性・安定性・ワークライフバランス・給与水準・社風・グローバル度・社会貢献度・キャリア成長性
+        </div>
+
+        <button onclick="goStep(2)" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl text-lg shadow-md transition active:scale-95">
+            診断をスタート →
+        </button>
+    </div>
+</div>
+
+<!-- ========== STEP 2: INDUSTRY SELECT ========== -->
+<div class="step fade-in" id="step2">
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
+        <p class="text-xs text-indigo-500 font-bold mb-1">STEP 1 / 3</p>
+        <h2 class="text-xl font-black text-stone-800 mb-1">興味のある業界を選んでください</h2>
+        <p class="text-sm text-stone-500 mb-5">複数選択できます（1つ以上）</p>
+
+        <div class="grid grid-cols-2 gap-3 mb-6" id="industry-grid">
+            <button class="industry-btn rounded-xl p-4 text-left" data-industry="IT" onclick="toggleIndustry(this)">
+                <div class="text-2xl mb-1">💻</div>
+                <div class="font-bold text-stone-800">IT・デジタル</div>
+                <div class="text-xs text-stone-500">テック・DX・ソフトウェア</div>
+            </button>
+            <button class="industry-btn rounded-xl p-4 text-left" data-industry="金融" onclick="toggleIndustry(this)">
+                <div class="text-2xl mb-1">🏦</div>
+                <div class="font-bold text-stone-800">金融・保険</div>
+                <div class="text-xs text-stone-500">銀行・証券・保険・Fintech</div>
+            </button>
+            <button class="industry-btn rounded-xl p-4 text-left" data-industry="コンサル" onclick="toggleIndustry(this)">
+                <div class="text-2xl mb-1">📊</div>
+                <div class="font-bold text-stone-800">コンサルティング</div>
+                <div class="text-xs text-stone-500">戦略・ITコンサル・監査</div>
+            </button>
+            <button class="industry-btn rounded-xl p-4 text-left" data-industry="製造" onclick="toggleIndustry(this)">
+                <div class="text-2xl mb-1">🏭</div>
+                <div class="font-bold text-stone-800">製造・メーカー</div>
+                <div class="text-xs text-stone-500">自動車・電機・精密機器</div>
+            </button>
+            <button class="industry-btn rounded-xl p-4 text-left" data-industry="消費財" onclick="toggleIndustry(this)">
+                <div class="text-2xl mb-1">🛍️</div>
+                <div class="font-bold text-stone-800">消費財・流通</div>
+                <div class="text-xs text-stone-500">化粧品・アパレル・小売</div>
+            </button>
+            <button class="industry-btn rounded-xl p-4 text-left" data-industry="医薬" onclick="toggleIndustry(this)">
+                <div class="text-2xl mb-1">💊</div>
+                <div class="font-bold text-stone-800">医薬・ヘルスケア</div>
+                <div class="text-xs text-stone-500">製薬・医療機器・FMCG</div>
+            </button>
+        </div>
+
+        <p class="text-xs text-red-400 mb-3 hidden" id="industry-error">※ 1つ以上選択してください</p>
+
+        <button onclick="goStep(3)" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl text-lg shadow-md transition active:scale-95">
+            次へ →
+        </button>
+    </div>
+</div>
+
+<!-- ========== STEP 3: QUESTIONNAIRE ========== -->
+<div class="step fade-in" id="step3">
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
+        <p class="text-xs text-indigo-500 font-bold mb-1">STEP 2 / 3</p>
+        <h2 class="text-xl font-black text-stone-800 mb-1">あなたの価値観・志向を教えてください</h2>
+        <p class="text-sm text-stone-500 mb-5">各質問で最も当てはまるものを選んでください</p>
+
+        <div id="questions-container" class="space-y-6"></div>
+
+        <p class="text-xs text-red-400 mt-3 mb-3 hidden" id="q-error">※ すべての質問に回答してください</p>
+
+        <button onclick="calcResults()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl text-lg shadow-md mt-4 transition active:scale-95">
+            診断する 🔍
+        </button>
+    </div>
+</div>
+
+<!-- ========== STEP 4: RESULTS ========== -->
+<div class="step fade-in" id="step4">
+    <div class="bg-indigo-700 rounded-2xl shadow-md p-6 mb-4 text-white text-center">
+        <div class="text-4xl mb-2">✨</div>
+        <h2 class="text-2xl font-black mb-1">診断完了！</h2>
+        <p class="text-indigo-200 text-sm">あなたに合う企業20社をスコア順に表示しています</p>
+    </div>
+
+    <!-- TOP 2 SPOTLIGHT -->
+    <h3 class="text-lg font-black text-stone-800 mb-3 flex items-center gap-2">
+        <span class="text-yellow-500">👑</span> トップ2企業 ─ インターン・説明会情報
+    </h3>
+    <div id="top2-container" class="space-y-4 mb-8"></div>
+
+    <!-- ALL 20 COMPANIES -->
+    <h3 class="text-lg font-black text-stone-800 mb-3 flex items-center gap-2">
+        <span>🏆</span> 全20社マッチングランキング
+    </h3>
+    <div id="ranking-container" class="space-y-2 mb-6"></div>
+
+    <button onclick="goStep(1); resetAll();" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold py-4 rounded-xl text-base transition active:scale-95">
+        もう一度診断する
+    </button>
+</div>
+
+</main>
+
+<footer class="text-center text-xs text-stone-400 py-6">
+    ※ 本ツールの企業情報・日程はサンプルデータです。実際の情報は各社公式サイトをご確認ください。
+</footer>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let selectedIndustries = [];
+let answers = {};
+
+// ============================================================
+// COMPANIES DATA (20社)
+// 8軸スコア: 革新性, 安定性, WLB, 給与, 社風, グローバル, 社会貢献, 成長性
+// ============================================================
+const companies = [
+    {
+        id: 1,
+        name: "NTTデータ",
+        industry: "IT",
+        icon: "🖥️",
+        tagline: "社会インフラを支える国内最大級のITサービス企業",
+        scores: { innovation:6, stability:9, wlb:7, salary:7, culture:6, global:6, social:9, growth:7 },
+        openwork: 3.8,
+        schedules: {
+            sessions: [
+                { date:"2026年6月12日(金)", time:"18:00〜19:30", format:"オンライン", theme:"事業説明＋若手社員座談会" },
+                { date:"2026年6月25日(木)", time:"14:00〜15:30", format:"オンライン", theme:"技術職向け仕事内容紹介" },
+                { date:"2026年7月8日(火)", time:"13:00〜15:00", format:"対面（品川）", theme:"会社見学＋人事説明会" }
+            ],
+            internships: [
+                { name:"夏季インターンシップ（1Day）", period:"2026年8月4日(火)〜8月29日(金) の各日程", duration:"1日", deadline:"2026年7月14日(月)", detail:"ITコンサルティング・システム開発のいずれかを選択。実際の案件を模したグループワーク形式。" },
+                { name:"夏季インターンシップ（5Days）", period:"2026年8月17日(月)〜8月21日(金)", duration:"5日間", deadline:"2026年7月21日(月)", detail:"プロジェクトマネジメント実務体験。メンター社員がつき本格的な業務プロセスを学べる。" },
+                { name:"冬季インターンシップ", period:"2027年2月9日(火)〜2月13日(土)", duration:"5日間", deadline:"2027年1月12日(月)", detail:"金融・公共・製造の各業界向けDXソリューション立案を体験。" }
+            ]
+        }
+    },
+    {
+        id: 2,
+        name: "富士通",
+        industry: "IT",
+        icon: "🔷",
+        tagline: "「Fujitsu Uvance」で社会課題解決に挑むグローバルITカンパニー",
+        scores: { innovation:7, stability:8, wlb:7, salary:7, culture:7, global:7, social:7, growth:7 },
+        openwork: 3.7,
+        schedules: {
+            sessions: [
+                { date:"2026年6月10日(水)", time:"17:00〜18:30", format:"オンライン", theme:"富士通のDX戦略と若手の活躍" },
+                { date:"2026年6月30日(月)", time:"13:00〜14:30", format:"オンライン", theme:"文理別キャリアパス紹介" }
+            ],
+            internships: [
+                { name:"夏季1Dayインターン", period:"2026年7月28日〜8月28日（複数日程）", duration:"1日", deadline:"2026年7月7日(火)", detail:"「社会課題×テクノロジー」をテーマにしたケーススタディワーク。" },
+                { name:"Open Work Style体験（3Days）", period:"2026年9月1日(火)〜9月3日(木)", duration:"3日間", deadline:"2026年8月11日(火)", detail:"Uvanceの各事業領域で実際の業務をOJT形式で体験。フルフレックス・在宅環境も体感。" }
+            ]
+        }
+    },
+    {
+        id: 3,
+        name: "ソニーグループ",
+        industry: "IT",
+        icon: "🎵",
+        tagline: "「感動」を世界に届けるエンタメ×テクノロジー企業",
+        scores: { innovation:9, stability:7, wlb:6, salary:8, culture:8, global:9, social:7, growth:8 },
+        openwork: 4.1,
+        schedules: {
+            sessions: [
+                { date:"2026年6月17日(水)", time:"19:00〜20:30", format:"オンライン", theme:"ソニーのビジョンと事業領域全体像" },
+                { date:"2026年7月1日(水)", time:"14:00〜16:00", format:"対面（品川）", theme:"エンジニア・クリエイター向け個別座談会" }
+            ],
+            internships: [
+                { name:"Sony Internship Program（夏）", period:"2026年8月3日(月)〜8月21日(金)", duration:"3週間", deadline:"2026年6月30日(火)", detail:"半導体・エレクトロニクス・エンタテインメントなど6部門から希望配属。実務プロジェクトに参加。" },
+                { name:"Sony Internship Program（冬）", period:"2027年1月12日(火)〜1月23日(金)", duration:"2週間", deadline:"2026年11月17日(月)", detail:"ゲーム・映画・音楽事業のビジネス戦略立案体験。プレゼン形式の最終発表あり。" }
+            ]
+        }
+    },
+    {
+        id: 4,
+        name: "サイバーエージェント",
+        industry: "IT",
+        icon: "🌐",
+        tagline: "AbemaTV・Ameba・広告事業を展開するインターネット総合企業",
+        scores: { innovation:8, stability:6, wlb:6, salary:7, culture:9, global:4, social:5, growth:8 },
+        openwork: 3.9,
+        schedules: {
+            sessions: [
+                { date:"2026年6月5日(金)", time:"19:30〜21:00", format:"オンライン", theme:"事業紹介＋若手エンジニア・プランナートーク" },
+                { date:"2026年7月14日(火)", time:"18:00〜19:30", format:"オンライン", theme:"内定者・若手社員によるリアルトーク" }
+            ],
+            internships: [
+                { name:"CA Tech Kids Summer（エンジニア）", period:"2026年8月17日(月)〜8月28日(金)", duration:"2週間", deadline:"2026年7月28日(月)", detail:"実際のプロダクト開発チームに配属し、自社サービスの機能改善に取り組む実践型インターン。" },
+                { name:"Abema職業体験インターン", period:"2026年9月7日(月)〜9月11日(金)", duration:"1週間", deadline:"2026年8月18日(火)", detail:"AbemaTVの番組制作・マーケティング・収益化の3コースから選択。" }
+            ]
+        }
+    },
+    {
+        id: 5,
+        name: "リクルートホールディングス",
+        industry: "IT",
+        icon: "💼",
+        tagline: "「まだ、ここにない、出会い。」HR Techで世界を変えるメガベンチャー",
+        scores: { innovation:8, stability:7, wlb:6, salary:8, culture:8, global:7, social:7, growth:9 },
+        openwork: 4.0,
+        schedules: {
+            sessions: [
+                { date:"2026年6月23日(火)", time:"19:00〜20:30", format:"オンライン", theme:"リクルートのビジネスモデルと成長戦略" },
+                { date:"2026年7月7日(火)", time:"14:00〜15:30", format:"オンライン", theme:"職種別キャリアパス（ビジネス職・テクノロジー職）" }
+            ],
+            internships: [
+                { name:"リクルートサマーインターンシップ（5Days）", period:"2026年8月3日(月)〜8月7日(金)", duration:"5日間", deadline:"2026年7月7日(火)", detail:"「事業立案」「マーケティング」「プロダクト開発」の3コース。OB/OGメンターとのフィードバックセッションあり。" },
+                { name:"秋季インターン（1Day）", period:"2026年10月中 各日程", duration:"1日", deadline:"2026年9月22日(火)", detail:"実際の営業・企画業務を疑似体験するケーススタディ形式。フィードバックシートを持ち帰れる。" }
+            ]
+        }
+    },
+    {
+        id: 6,
+        name: "三菱UFJ銀行",
+        industry: "金融",
+        icon: "🏛️",
+        tagline: "日本最大のメガバンク。国内外の法人・個人をトータルサポート",
+        scores: { innovation:5, stability:9, wlb:7, salary:8, culture:5, global:8, social:7, growth:6 },
+        openwork: 3.4,
+        schedules: {
+            sessions: [
+                { date:"2026年6月9日(火)", time:"17:00〜18:30", format:"オンライン", theme:"MUFGグループの全体像と事業戦略" },
+                { date:"2026年6月22日(月)", time:"13:00〜14:30", format:"オンライン", theme:"総合職・グローバル職の違いと採用プロセス" }
+            ],
+            internships: [
+                { name:"MUFG Summer Internship（3Days）", period:"2026年8月17日(月)〜8月19日(水)", duration:"3日間", deadline:"2026年7月21日(月)", detail:"法人・個人・グローバルの3コースから選択。リアルな審査書類を使った与信分析演習。" },
+                { name:"MUFGデジタル体験インターン", period:"2026年9月14日(月)〜9月15日(火)", duration:"2日間", deadline:"2026年8月24日(月)", detail:"銀行DX・デジタル通貨・フィンテックの最前線を体験。IT部門社員との交流あり。" }
+            ]
+        }
+    },
+    {
+        id: 7,
+        name: "野村証券",
+        industry: "金融",
+        icon: "📈",
+        tagline: "国内トップの証券会社。資本市場を動かすファイナンスの最前線",
+        scores: { innovation:6, stability:7, wlb:4, salary:9, culture:5, global:8, social:6, growth:7 },
+        openwork: 3.3,
+        schedules: {
+            sessions: [
+                { date:"2026年6月16日(火)", time:"18:00〜19:30", format:"オンライン", theme:"証券ビジネスの全体像と若手の役割" },
+                { date:"2026年7月2日(木)", time:"14:00〜15:30", format:"対面（大手町）", theme:"IBD・マーケット部門リアル説明会" }
+            ],
+            internships: [
+                { name:"Investment Banking部門インターン", period:"2026年8月10日(月)〜8月21日(金)", duration:"2週間", deadline:"2026年7月6日(月)", detail:"M&A・IPO案件の財務分析・モデリング実習。Excel/PowerPoint実践スキルが身につく。" },
+                { name:"マーケット部門1Dayインターン", period:"2026年8月中 各日程", duration:"1日", deadline:"2026年7月20日(月)", detail:"株式・債券・デリバティブ取引シミュレーション体験。現役トレーダーによる解説あり。" }
+            ]
+        }
+    },
+    {
+        id: 8,
+        name: "東京海上日動火災保険",
+        industry: "金融",
+        icon: "🛡️",
+        tagline: "損害保険トップ。人と社会の「安心」を守る使命感あふれる企業",
+        scores: { innovation:5, stability:9, wlb:8, salary:7, culture:6, global:7, social:9, growth:6 },
+        openwork: 3.6,
+        schedules: {
+            sessions: [
+                { date:"2026年6月11日(木)", time:"17:30〜19:00", format:"オンライン", theme:"保険の仕組みと東京海上日動の事業戦略" },
+                { date:"2026年7月3日(金)", time:"13:00〜14:30", format:"オンライン", theme:"損害サービス・営業・商品開発の3職種説明" }
+            ],
+            internships: [
+                { name:"夏季インターンシップ（3Days）", period:"2026年8月3日(月)〜8月5日(水)", duration:"3日間", deadline:"2026年7月14日(月)", detail:"「自然災害×保険」をテーマにしたリスクアセスメントワーク。現場社員によるメンタリングあり。" },
+                { name:"損害サービス体験コース（2Days）", period:"2026年9月8日(火)〜9月9日(水)", duration:"2日間", deadline:"2026年8月17日(月)", detail:"実際の事故・災害案件（フィクション）への対応を体験。交渉・折衝ロールプレイ演習。" }
+            ]
+        }
+    },
+    {
+        id: 9,
+        name: "SBIホールディングス",
+        industry: "金融",
+        icon: "💹",
+        tagline: "証券・銀行・保険を一体化した次世代金融エコシステムのリーダー",
+        scores: { innovation:7, stability:6, wlb:5, salary:7, culture:7, global:6, social:6, growth:8 },
+        openwork: 3.5,
+        schedules: {
+            sessions: [
+                { date:"2026年6月18日(木)", time:"19:00〜20:00", format:"オンライン", theme:"フィンテック×金融グループの成長戦略" },
+                { date:"2026年7月9日(木)", time:"18:00〜19:30", format:"オンライン", theme:"SBI各子会社の仕事・キャリア紹介" }
+            ],
+            internships: [
+                { name:"SBI Fintech Challenge（夏）", period:"2026年8月24日(月)〜8月28日(金)", duration:"5日間", deadline:"2026年7月28日(月)", detail:"SBI証券・SBI銀行・SBI生命の各部署でリアル業務を体験。最終日に事業アイデアを発表。" }
+            ]
+        }
+    },
+    {
+        id: 10,
+        name: "アクセンチュア",
+        industry: "コンサル",
+        icon: "⚡",
+        tagline: "740,000人超のグローバルコンサル＆テクノロジーリーダー",
+        scores: { innovation:9, stability:7, wlb:5, salary:9, culture:8, global:10, social:7, growth:9 },
+        openwork: 4.0,
+        schedules: {
+            sessions: [
+                { date:"2026年6月4日(木)", time:"19:00〜20:30", format:"オンライン", theme:"アクセンチュアの事業・文化・キャリアパス" },
+                { date:"2026年6月25日(木)", time:"14:00〜15:30", format:"対面（港区）", theme:"テクノロジー&ストラテジー部門OB/OG座談会" }
+            ],
+            internships: [
+                { name:"Accenture Summer Internship（5Days）", period:"2026年8月3日(月)〜8月7日(金)", duration:"5日間", deadline:"2026年7月6日(月)", detail:"Strategy/Technology/Operationsの3コースから選択。グローバルケースを使ったコンサルティング体験。英語力が活かせる環境。" },
+                { name:"デジタルテクノロジー体験インターン（2Days）", period:"2026年9月16日(水)〜9月17日(木)", duration:"2日間", deadline:"2026年8月24日(月)", detail:"AI・クラウド・サイバーセキュリティの最前線技術を使ったハンズオン演習。" }
+            ]
+        }
+    },
+    {
+        id: 11,
+        name: "デロイトトーマツコンサルティング",
+        industry: "コンサル",
+        icon: "🔷",
+        tagline: "Big4の一角。戦略・業務・ITコンサルをワンストップで提供",
+        scores: { innovation:8, stability:7, wlb:5, salary:9, culture:7, global:9, social:7, growth:9 },
+        openwork: 3.9,
+        schedules: {
+            sessions: [
+                { date:"2026年6月10日(水)", time:"18:00〜19:30", format:"オンライン", theme:"コンサルタントの1日と業務フロー" },
+                { date:"2026年7月7日(火)", time:"17:00〜18:30", format:"オンライン", theme:"文系・理系別キャリア事例紹介" }
+            ],
+            internships: [
+                { name:"DTC Consulting Summer Experience（5Days）", period:"2026年8月24日(月)〜8月28日(金)", duration:"5日間", deadline:"2026年7月27日(月)", detail:"実在する業界課題をもとにした戦略立案ワーク。パートナー・マネジャーによる本格的なフィードバックセッション。" },
+                { name:"1Day仕事体験", period:"2026年10月 各日程", duration:"1日", deadline:"2026年9月29日(月)", detail:"コンサルタントの思考プロセスを実体験。ケーススタディ＋グループディスカッション形式。" }
+            ]
+        }
+    },
+    {
+        id: 12,
+        name: "BCGジャパン（ボストンコンサルティンググループ）",
+        industry: "コンサル",
+        icon: "🌐",
+        tagline: "世界トップの戦略コンサルファーム。最難関かつ最高峰のキャリア",
+        scores: { innovation:9, stability:7, wlb:4, salary:10, culture:7, global:10, social:6, growth:9 },
+        openwork: 4.2,
+        schedules: {
+            sessions: [
+                { date:"2026年6月3日(水)", time:"19:00〜21:00", format:"オンライン", theme:"BCGのビジョン・働き方・選考プロセス解説" },
+                { date:"2026年6月26日(金)", time:"18:00〜20:00", format:"対面（大手町）", theme:"コンサルタントによる少人数座談会" }
+            ],
+            internships: [
+                { name:"BCG Summer Internship（4週間）", period:"2026年8月3日(月)〜8月28日(金)", duration:"4週間", deadline:"2026年6月22日(月)", detail:"実際のクライアントプロジェクトに正式メンバーとしてアサイン。優秀者には早期内定オファーあり。世界最高峰のケーススタディ経験が積める。" }
+            ]
+        }
+    },
+    {
+        id: 13,
+        name: "トヨタ自動車",
+        industry: "製造",
+        icon: "🚗",
+        tagline: "世界最大の自動車メーカー。CASE革命でモビリティの未来を再定義",
+        scores: { innovation:8, stability:9, wlb:7, salary:8, culture:7, global:9, social:8, growth:8 },
+        openwork: 3.8,
+        schedules: {
+            sessions: [
+                { date:"2026年6月15日(月)", time:"14:00〜15:30", format:"オンライン", theme:"トヨタのCASE戦略と未来のモビリティ" },
+                { date:"2026年7月6日(月)", time:"18:00〜19:30", format:"オンライン", theme:"技術系・事務系職種別仕事説明会" }
+            ],
+            internships: [
+                { name:"技術系インターンシップ（5Days）", period:"2026年8月17日(月)〜8月21日(金)", duration:"5日間", deadline:"2026年7月13日(月)", detail:"車両・電動化・自動運転・製造各部門に配属。実際の開発テーマに沿った設計・検証作業を体験。愛知県豊田市の研究施設での実施。" },
+                { name:"事務系Toyotaインターン（3Days）", period:"2026年8月25日(火)〜8月27日(木)", duration:"3日間", deadline:"2026年7月27日(月)", detail:"経営企画・マーケティング・海外営業のケースワーク。世界戦略の意思決定プロセスを体感。" }
+            ]
+        }
+    },
+    {
+        id: 14,
+        name: "本田技研工業（ホンダ）",
+        industry: "製造",
+        icon: "🏍️",
+        tagline: "「夢のある製品で世界の人々に喜びを届ける」独創性の自動車・二輪メーカー",
+        scores: { innovation:8, stability:8, wlb:7, salary:7, culture:8, global:9, social:7, growth:7 },
+        openwork: 3.7,
+        schedules: {
+            sessions: [
+                { date:"2026年6月19日(金)", time:"17:00〜18:30", format:"オンライン", theme:"ホンダの技術哲学とHondaJet・EVへの挑戦" },
+                { date:"2026年7月10日(金)", time:"14:00〜15:30", format:"対面（青山）", theme:"若手エンジニア・ビジネス職座談会" }
+            ],
+            internships: [
+                { name:"Honda Summer Internship（5Days）", period:"2026年8月3日(月)〜8月7日(金)", duration:"5日間", deadline:"2026年7月6日(月)", detail:"研究開発・生産・電動化・モビリティサービスの各コース。埼玉和光研究所または栃木研究所での実施。" },
+                { name:"ビジネスコース体験インターン（3Days）", period:"2026年9月1日(火)〜9月3日(木)", duration:"3日間", deadline:"2026年8月3日(月)", detail:"グローバル営業・購買・経営企画のシミュレーション体験。多様なバックグラウンドの学生と協働。" }
+            ]
+        }
+    },
+    {
+        id: 15,
+        name: "パナソニックホールディングス",
+        industry: "製造",
+        icon: "⚙️",
+        tagline: "くらしと社会に貢献する電機×素材×エネルギーの総合メーカー",
+        scores: { innovation:7, stability:8, wlb:8, salary:7, culture:6, global:7, social:8, growth:6 },
+        openwork: 3.5,
+        schedules: {
+            sessions: [
+                { date:"2026年6月22日(月)", time:"17:00〜18:30", format:"オンライン", theme:"パナソニックグループの事業変革と未来" },
+                { date:"2026年7月13日(月)", time:"14:00〜15:30", format:"オンライン", theme:"キャリア職種別紹介（エンジニア・企画・営業）" }
+            ],
+            internships: [
+                { name:"技術系インターン（5Days）", period:"2026年8月17日(月)〜8月21日(金)", duration:"5日間", deadline:"2026年7月20日(月)", detail:"EV電池・空調・映像技術など先端テーマへの配属実習。大阪・神奈川・静岡の各拠点で実施。" }
+            ]
+        }
+    },
+    {
+        id: 16,
+        name: "村田製作所",
+        industry: "製造",
+        icon: "🔬",
+        tagline: "電子部品世界シェアNo.1。積層セラミックコンデンサを中心に世界を支える",
+        scores: { innovation:8, stability:8, wlb:8, salary:7, culture:7, global:8, social:6, growth:7 },
+        openwork: 3.8,
+        schedules: {
+            sessions: [
+                { date:"2026年6月24日(水)", time:"17:00〜18:30", format:"オンライン", theme:"電子部品の世界と村田製作所の技術強み" },
+                { date:"2026年7月16日(木)", time:"14:00〜15:30", format:"対面（京都）", theme:"研究開発・生産技術・品質保証の仕事紹介" }
+            ],
+            internships: [
+                { name:"研究開発体験インターン（5Days）", period:"2026年8月17日(月)〜8月21日(金)", duration:"5日間", deadline:"2026年7月21日(月)", detail:"材料・プロセス・評価の実験実習。配属先の現役エンジニアの指導のもと実際の研究テーマに取り組む。京都府長岡京市本社にて実施。" }
+            ]
+        }
+    },
+    {
+        id: 17,
+        name: "資生堂",
+        industry: "消費財",
+        icon: "💄",
+        tagline: "創業150年超のビューティー企業。「BEAUTY INNOVATIONS FOR A BETTER WORLD」",
+        scores: { innovation:7, stability:7, wlb:8, salary:7, culture:8, global:9, social:8, growth:7 },
+        openwork: 3.7,
+        schedules: {
+            sessions: [
+                { date:"2026年6月11日(木)", time:"18:30〜20:00", format:"オンライン", theme:"資生堂のグローバル戦略と美容の未来" },
+                { date:"2026年7月2日(木)", time:"14:00〜15:30", format:"対面（汐留）", theme:"研究・マーケティング・SCM職種説明会" }
+            ],
+            internships: [
+                { name:"Shiseido Summer Internship（5Days）", period:"2026年8月17日(月)〜8月21日(金)", duration:"5日間", deadline:"2026年7月20日(月)", detail:"R&D・マーケティング・デジタルビューティーの3コース。新製品開発の企画〜発表まで一連を体験。" },
+                { name:"R&D体験コース（3Days）", period:"2026年9月8日(火)〜9月10日(木)", duration:"3日間", deadline:"2026年8月10日(月)", detail:"神奈川研究所にて基礎研究・製品処方・評価実験を体験。皮膚科学・化粧品科学の最前線に触れる。" }
+            ]
+        }
+    },
+    {
+        id: 18,
+        name: "ファーストリテイリング（ユニクロ）",
+        industry: "消費財",
+        icon: "👕",
+        tagline: "「服のチカラを、社会のチカラに。」グローバル小売No.1を目指す",
+        scores: { innovation:7, stability:7, wlb:5, salary:7, culture:8, global:9, social:6, growth:8 },
+        openwork: 3.6,
+        schedules: {
+            sessions: [
+                { date:"2026年6月4日(木)", time:"19:00〜20:30", format:"オンライン", theme:"ファーストリテイリングのグローバルビジョン" },
+                { date:"2026年7月2日(木)", time:"17:00〜18:30", format:"オンライン", theme:"グローバル経営幹部候補制度の概要" }
+            ],
+            internships: [
+                { name:"グローバルリーダー体験インターン（5Days）", period:"2026年8月24日(月)〜8月28日(金)", duration:"5日間", deadline:"2026年7月27日(月)", detail:"店舗運営・商品企画・EC戦略の3トラック。海外学生との混成チームで事業課題に取り組む英語使用環境。" }
+            ]
+        }
+    },
+    {
+        id: 19,
+        name: "武田薬品工業",
+        industry: "医薬",
+        icon: "🧬",
+        tagline: "日本最大の製薬会社。がん・消化器・希少疾患領域で世界をリード",
+        scores: { innovation:8, stability:7, wlb:7, salary:8, culture:7, global:10, social:9, growth:7 },
+        openwork: 3.9,
+        schedules: {
+            sessions: [
+                { date:"2026年6月9日(火)", time:"18:00〜19:30", format:"オンライン", theme:"タケダのグローバルR&D戦略と製薬のキャリア" },
+                { date:"2026年7月7日(火)", time:"14:00〜15:30", format:"オンライン", theme:"MR・開発・研究・コーポレート職種紹介" }
+            ],
+            internships: [
+                { name:"Takeda R&D Summer Internship（2weeks）", period:"2026年8月3日(月)〜8月14日(金)", duration:"2週間", deadline:"2026年6月29日(月)", detail:"創薬研究・臨床開発・薬事規制の各部門へ配属実習。英語を使う機会が多く、国際的な製薬業界のキャリアイメージが掴める。" },
+                { name:"ビジネス系1Day体験", period:"2026年9月中 各日程", duration:"1日", deadline:"2026年8月31日(月)", detail:"医薬品マーケティング・市場アクセス・渉外のシミュレーションワーク。" }
+            ]
+        }
+    },
+    {
+        id: 20,
+        name: "花王",
+        industry: "医薬",
+        icon: "🌸",
+        tagline: "「よきモノをつくり、よき社会をつくる」日用品・化粧品の老舗優良企業",
+        scores: { innovation:7, stability:8, wlb:8, salary:7, culture:7, global:8, social:9, growth:7 },
+        openwork: 3.8,
+        schedules: {
+            sessions: [
+                { date:"2026年6月17日(水)", time:"17:00〜18:30", format:"オンライン", theme:"花王のESG経営と生活者起点のイノベーション" },
+                { date:"2026年7月8日(水)", time:"14:00〜15:30", format:"オンライン", theme:"研究・マーケ・サプライチェーン職種紹介" }
+            ],
+            internships: [
+                { name:"花王 Research Challenge（5Days）", period:"2026年8月17日(月)〜8月21日(金)", duration:"5日間", deadline:"2026年7月21日(月)", detail:"素材研究・製品開発・生産技術の3コース。東京・和歌山・栃木の研究施設で実際の研究テーマに取り組む実習型インターン。" },
+                { name:"ビジネスイノベーション体験（3Days）", period:"2026年9月14日(月)〜9月16日(水)", duration:"3日間", deadline:"2026年8月17日(月)", detail:"サステナビリティ×新規事業をテーマにした社会課題解決型ワークショップ。" }
+            ]
+        }
+    }
+];
+
+// ============================================================
+// QUESTIONNAIRE DATA
+// ============================================================
+const questions = [
+    {
+        id: "q1",
+        text: "仕事で最も大切にしたいことは？",
+        options: [
+            { label:"🚀 革新・変化への挑戦", weights:{ innovation:3, growth:2 } },
+            { label:"🏛️ 安定・長期的な雇用", weights:{ stability:3, wlb:1 } },
+            { label:"🌍 社会・環境への貢献", weights:{ social:3, culture:1 } },
+            { label:"💰 高収入・待遇の充実", weights:{ salary:3, growth:1 } }
+        ]
+    },
+    {
+        id: "q2",
+        text: "理想の働き方に近いのはどれ？",
+        options: [
+            { label:"👥 チームで協力してプロジェクトを達成", weights:{ culture:3, social:1 } },
+            { label:"🧑‍💻 自分の専門性を深めて成果を出す", weights:{ innovation:2, wlb:1, growth:1 } },
+            { label:"🌏 海外や多様な人と一緒に仕事したい", weights:{ global:3, innovation:1 } },
+            { label:"⚖️ 仕事もプライベートも両立したい", weights:{ wlb:3, stability:1 } }
+        ]
+    },
+    {
+        id: "q3",
+        text: "希望する企業規模は？",
+        options: [
+            { label:"🏢 大手企業（安定・ブランド力重視）", weights:{ stability:3, salary:1 } },
+            { label:"🏬 中堅企業（バランス重視）", weights:{ wlb:2, culture:2 } },
+            { label:"⚡ ベンチャー・スタートアップ（スピード・裁量）", weights:{ innovation:3, growth:2 } },
+            { label:"🔄 規模より社風・文化を重視", weights:{ culture:3, wlb:1 } }
+        ]
+    },
+    {
+        id: "q4",
+        text: "グローバルな環境への希望は？",
+        options: [
+            { label:"🌐 海外で活躍したい・英語を使いたい", weights:{ global:3, innovation:1 } },
+            { label:"🗾 国内で専門性を磨きたい", weights:{ stability:2, social:1 } },
+            { label:"🔀 国内・海外どちらも挑戦してみたい", weights:{ global:2, growth:1 } },
+            { label:"🏡 勤務地の安定・生活拠点を大事にしたい", weights:{ wlb:2, stability:2 } }
+        ]
+    },
+    {
+        id: "q5",
+        text: "あなたの一番の強みは？",
+        options: [
+            { label:"📐 論理的思考・データ分析", weights:{ innovation:2, salary:1, growth:1 } },
+            { label:"💬 コミュニケーション・交渉・営業", weights:{ culture:2, social:1, salary:1 } },
+            { label:"💻 技術・プログラミング・エンジニアリング", weights:{ innovation:3, global:1 } },
+            { label:"🎨 企画・クリエイティブ・発想力", weights:{ innovation:2, culture:2 } }
+        ]
+    },
+    {
+        id: "q6",
+        text: "キャリアの優先順位は？",
+        options: [
+            { label:"📊 若いうちに結果を出してキャリアアップ", weights:{ growth:3, salary:2 } },
+            { label:"🧑‍🏫 じっくり専門性を高めてスペシャリストに", weights:{ stability:2, innovation:2 } },
+            { label:"🌱 社会課題の解決に携わりたい", weights:{ social:3, culture:1 } },
+            { label:"🏆 有名企業でブランド力あるキャリアを積む", weights:{ stability:2, salary:2 } }
+        ]
+    },
+    {
+        id: "q7",
+        text: "就職活動で最も重視する情報は？",
+        options: [
+            { label:"💬 社員の口コミ・職場の雰囲気", weights:{ culture:3, wlb:2 } },
+            { label:"📈 企業の成長性・将来性", weights:{ innovation:2, growth:2 } },
+            { label:"💴 給与・昇給・福利厚生", weights:{ salary:3, stability:1 } },
+            { label:"🌟 会社の知名度・社会的信頼性", weights:{ stability:3, social:1 } }
+        ]
+    },
+    {
+        id: "q8",
+        text: "インターンシップに期待することは？",
+        options: [
+            { label:"🧪 実際の業務を体験したい（リアルな実務）", weights:{ growth:2, innovation:2 } },
+            { label:"🤝 社員との繋がり・内定に近づきたい", weights:{ culture:2, salary:1, stability:1 } },
+            { label:"🧠 思考力・スキルを磨きたい（ケーススタディ）", weights:{ innovation:2, growth:2 } },
+            { label:"🌍 多様な人と出会い視野を広げたい", weights:{ global:2, culture:2 } }
+        ]
+    }
+];
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    document.getElementById('step' + n).classList.add('fade-in');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    updateDots(n);
+}
+
+function updateDots(n) {
+    for (let i = 1; i <= 4; i++) {
+        const dot = document.getElementById('dot' + i);
+        dot.className = 'progress-dot ' + (i <= n ? 'bg-white' : 'bg-indigo-400');
+    }
+}
+
+// ============================================================
+// INDUSTRY TOGGLE
+// ============================================================
+function toggleIndustry(btn) {
+    btn.classList.toggle('selected');
+    selectedIndustries = Array.from(document.querySelectorAll('.industry-btn.selected')).map(b => b.dataset.industry);
+    document.getElementById('industry-error').classList.add('hidden');
+}
+
+// ============================================================
+// RENDER QUESTIONNAIRE
+// ============================================================
+function renderQuestionnaire() {
+    const container = document.getElementById('questions-container');
+    container.innerHTML = '';
+    questions.forEach((q, qi) => {
+        const div = document.createElement('div');
+        div.className = 'mb-2';
+        div.innerHTML = `
+            <p class="font-bold text-stone-800 mb-2 text-sm">Q${qi+1}. ${q.text}</p>
+            <div class="grid grid-cols-1 gap-2" id="options-${q.id}">
+                ${q.options.map((opt, oi) => `
+                    <div class="q-option rounded-lg px-4 py-3 text-sm font-medium text-stone-700"
+                         data-q="${q.id}" data-i="${oi}"
+                         onclick="selectOption(this, '${q.id}', ${oi})">
+                        ${opt.label}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function selectOption(el, qid, optIdx) {
+    document.querySelectorAll(`[data-q="${qid}"]`).forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    answers[qid] = optIdx;
+}
+
+// ============================================================
+// SCORING ALGORITHM
+// ============================================================
+function calcResults() {
+    if (selectedIndustries.length === 0) {
+        goStep(2);
+        document.getElementById('industry-error').classList.remove('hidden');
+        return;
+    }
+
+    const unanswered = questions.filter(q => answers[q.id] === undefined);
+    if (unanswered.length > 0) {
+        document.getElementById('q-error').classList.remove('hidden');
+        return;
+    }
+    document.getElementById('q-error').classList.add('hidden');
+
+    // Build dimension weights from answers
+    const userWeights = { innovation:0, stability:0, wlb:0, salary:0, culture:0, global:0, social:0, growth:0 };
+    questions.forEach(q => {
+        const chosen = q.options[answers[q.id]];
+        Object.entries(chosen.weights).forEach(([dim, val]) => {
+            userWeights[dim] = (userWeights[dim] || 0) + val;
+        });
+    });
+
+    // Normalize weights to sum to 1
+    const wTotal = Object.values(userWeights).reduce((a, b) => a + b, 0);
+    const normWeights = {};
+    Object.entries(userWeights).forEach(([k, v]) => normWeights[k] = v / wTotal);
+
+    // Score each company
+    const dimKeys = ['innovation','stability','wlb','salary','culture','global','social','growth'];
+
+    const scored = companies.map(co => {
+        // Weighted score (0-10)
+        let rawScore = dimKeys.reduce((sum, d) => sum + (co.scores[d] * (normWeights[d] || 0)), 0);
+
+        // Industry match bonus: +15% if user selected this industry
+        const industryMap = { IT:'IT', '金融':'金融', 'コンサル':'コンサル', '製造':'製造', '消費財':'消費財', '医薬':'医薬' };
+        const coIndustry = co.industry;
+        if (selectedIndustries.includes(coIndustry)) {
+            rawScore *= 1.18;
+        } else {
+            rawScore *= 0.88;
+        }
+
+        // OpenWork bonus (normalised 0-5 → small bump)
+        rawScore += (co.openwork - 3.0) * 0.3;
+
+        // Convert to percentage 0-100
+        const pct = Math.min(100, Math.round((rawScore / 10) * 100));
+        return { ...co, matchScore: pct };
+    });
+
+    // Sort descending
+    scored.sort((a, b) => b.matchScore - a.matchScore);
+
+    renderResults(scored);
+    goStep(4);
+}
+
+// ============================================================
+// RENDER RESULTS
+// ============================================================
+function renderResults(ranked) {
+    renderTop2(ranked.slice(0, 2));
+    renderRanking(ranked);
+}
+
+function matchColor(score) {
+    if (score >= 85) return { ring:'#7c3aed', bg:'bg-violet-50', text:'text-violet-700', badge:'bg-violet-100 text-violet-800' };
+    if (score >= 75) return { ring:'#2563eb', bg:'bg-blue-50', text:'text-blue-700', badge:'bg-blue-100 text-blue-800' };
+    if (score >= 60) return { ring:'#059669', bg:'bg-emerald-50', text:'text-emerald-700', badge:'bg-emerald-100 text-emerald-800' };
+    return { ring:'#d97706', bg:'bg-amber-50', text:'text-amber-700', badge:'bg-amber-100 text-amber-800' };
+}
+
+function renderTop2(top2) {
+    const container = document.getElementById('top2-container');
+    container.innerHTML = '';
+
+    top2.forEach((co, idx) => {
+        const col = matchColor(co.matchScore);
+        const card = document.createElement('div');
+        card.className = `${col.bg} rounded-2xl shadow-md overflow-hidden mb-2 fade-in`;
+
+        const sessionsHTML = co.schedules.sessions.map(s => `
+            <div class="schedule-card border-green-400 bg-white rounded-lg px-3 py-2 mb-2">
+                <div class="flex items-start gap-2">
+                    <span class="text-green-500 mt-0.5">📋</span>
+                    <div>
+                        <div class="font-bold text-stone-800 text-sm">${s.date} ${s.time}</div>
+                        <div class="text-xs text-stone-500">${s.format}｜${s.theme}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        const internHTML = co.schedules.internships.map(intern => `
+            <div class="schedule-card border-indigo-400 bg-white rounded-lg px-3 py-2 mb-2">
+                <div class="flex items-start gap-2">
+                    <span class="text-indigo-500 mt-0.5">💼</span>
+                    <div>
+                        <div class="font-bold text-stone-800 text-sm">${intern.name}</div>
+                        <div class="text-xs text-indigo-600 mt-0.5">📅 ${intern.period}（${intern.duration}）</div>
+                        <div class="text-xs text-red-500">⏰ 締切：${intern.deadline}</div>
+                        <div class="text-xs text-stone-600 mt-1 leading-relaxed">${intern.detail}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        card.innerHTML = `
+            <div class="p-4 border-b border-white/50">
+                <div class="flex items-center gap-4">
+                    <div class="match-ring" style="border-color:${col.ring};color:${col.ring}">
+                        ${co.matchScore}%
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <span class="text-yellow-500 font-black text-base">${idx === 0 ? '🥇 第1位' : '🥈 第2位'}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${col.badge}">${co.industry}</span>
+                        </div>
+                        <div class="font-black text-stone-800 text-lg leading-tight">${co.icon} ${co.name}</div>
+                        <div class="text-xs text-stone-500 mt-0.5 leading-relaxed">${co.tagline}</div>
+                    </div>
+                </div>
+                <!-- Score bars -->
+                <div class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1">
+                    ${[
+                        ['革新性', co.scores.innovation],
+                        ['安定性', co.scores.stability],
+                        ['WLB', co.scores.wlb],
+                        ['給与水準', co.scores.salary],
+                        ['社風', co.scores.culture],
+                        ['グローバル', co.scores.global],
+                        ['社会貢献', co.scores.social],
+                        ['成長性', co.scores.growth]
+                    ].map(([label, val]) => `
+                        <div>
+                            <div class="flex justify-between text-xs mb-0.5">
+                                <span class="text-stone-500">${label}</span>
+                                <span class="${col.text} font-bold">${val}/10</span>
+                            </div>
+                            <div class="h-1.5 bg-white rounded-full overflow-hidden">
+                                <div class="h-full rounded-full score-bar-fill" style="width:${val*10}%;background:${col.ring}"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="mt-2 text-xs text-stone-500">OpenWork評価: <span class="font-bold text-stone-700">⭐ ${co.openwork} / 5.0</span></div>
+            </div>
+
+            <div class="p-4">
+                <h4 class="font-black text-stone-700 text-sm mb-2">📋 会社説明会 日程</h4>
+                ${sessionsHTML}
+                <h4 class="font-black text-stone-700 text-sm mb-2 mt-3">💼 インターンシップ 日程</h4>
+                ${internHTML}
+                <div class="mt-3 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-amber-700">
+                    ⚠️ 応募前に各社公式サイトで最新情報をご確認ください
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderRanking(ranked) {
+    const container = document.getElementById('ranking-container');
+    container.innerHTML = '';
+
+    ranked.forEach((co, idx) => {
+        const col = matchColor(co.matchScore);
+        const badgeColors = [
+            'bg-yellow-400 text-yellow-900',
+            'bg-gray-300 text-gray-800',
+            'bg-amber-600 text-amber-100',
+        ];
+        const badgeClass = idx < 3 ? badgeColors[idx] : 'bg-stone-200 text-stone-600';
+
+        const row = document.createElement('div');
+        row.className = 'bg-white rounded-xl shadow-sm p-3 flex items-center gap-3 fade-in';
+        row.innerHTML = `
+            <div class="rank-badge ${badgeClass}">${idx + 1}</div>
+            <div class="text-xl">${co.icon}</div>
+            <div class="flex-1 min-w-0">
+                <div class="font-bold text-stone-800 text-sm truncate">${co.name}</div>
+                <div class="text-xs text-stone-400">${co.industry}</div>
+            </div>
+            <div class="text-right flex-shrink-0">
+                <div class="font-black text-base" style="color:${col.ring}">${co.matchScore}%</div>
+                <div class="text-xs text-stone-400">マッチ度</div>
+            </div>
+            <div class="w-20 h-2 bg-stone-100 rounded-full overflow-hidden flex-shrink-0">
+                <div class="h-full rounded-full" style="width:${co.matchScore}%;background:${col.ring}"></div>
+            </div>
+        `;
+        container.appendChild(row);
+    });
+}
+
+// ============================================================
+// RESET
+// ============================================================
+function resetAll() {
+    selectedIndustries = [];
+    answers = {};
+    document.querySelectorAll('.industry-btn').forEach(b => b.classList.remove('selected'));
+    renderQuestionnaire();
+    updateDots(1);
+}
+
+// ============================================================
+// STEP 2→3 validation
+// ============================================================
+const origGoStep = goStep;
+window.goStep = function(n) {
+    if (n === 3) {
+        if (selectedIndustries.length === 0) {
+            document.getElementById('industry-error').classList.remove('hidden');
+            return;
+        }
+    }
+    origGoStep(n);
+    if (n === 3) renderQuestionnaire();
+};
+
+// Init
+renderQuestionnaire();
+</script>
+</body>
+</html>
